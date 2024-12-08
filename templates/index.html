@@ -1,0 +1,93 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>Image Search</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Image Search</h1>
+        <form id="search-form">
+            <label for="image_query">Image query:</label>
+            <input type="file" id="image_query" name="image_query" accept="image/*"><br><br>
+
+            <label for="text_query">Text query:</label>
+            <input type="text" id="text_query" name="text_query" placeholder="Enter text query"><br><br>
+
+            <label for="hybrid_weight">Hybrid Query Weight (λ):</label>
+            <input type="number" id="hybrid_weight" name="hybrid_weight" step="0.1" value="0.8"><br><br>
+
+            <label for="query_type">Select query type:</label>
+            <select id="query_type" name="query_type">
+                <option value="text_query">Text query</option>
+                <option value="image_query">Image query</option>
+                <option value="hybrid_query">Hybrid query</option>
+            </select><br><br>
+
+            <button type="submit">Search</button>
+        </form>
+
+        <h2>Top Search Results</h2>
+        <div class="results"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.querySelector('#search-form');
+
+            form.addEventListener('submit', function (event) {
+                event.preventDefault(); // Prevent the default form submission
+
+                const formData = new FormData(form); // Create a FormData object
+                const searchResultsContainer = document.querySelector('.results');
+                searchResultsContainer.innerHTML = ''; // Clear any previous results
+
+                // Make an AJAX POST request
+                fetch('/search', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Check if results are present
+                    if (data.results && data.results.length > 0) {
+                        data.results.forEach(result => {
+                            const resultDiv = document.createElement('div');
+                            resultDiv.classList.add('result');
+
+                            // Add the image
+                            const img = document.createElement('img');
+                            img.src = `/static/${result.image_path}`;
+                            img.alt = 'Result Image';
+                            resultDiv.appendChild(img);
+
+                            // Add the similarity score
+                            const similarity = document.createElement('p');
+                            similarity.textContent = `Similarity: ${result.similarity.toFixed(3)}`;
+                            resultDiv.appendChild(similarity);
+
+                            // Append result to the container
+                            searchResultsContainer.appendChild(resultDiv);
+                        });
+                    } else {
+                        // Show a message if no results are found
+                        const message = document.createElement('p');
+                        message.textContent = 'No results found.';
+                        searchResultsContainer.appendChild(message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    const errorMessage = document.createElement('p');
+                    errorMessage.textContent = 'An error occurred while processing the search.';
+                    searchResultsContainer.appendChild(errorMessage);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+

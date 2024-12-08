@@ -1,0 +1,5 @@
+venv/
+image_directory/coco_images_resized/
+uploads/*
+results/
+__pycache__/
